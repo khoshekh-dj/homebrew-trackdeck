@@ -6,6 +6,17 @@ set -euo pipefail
 repo=khoshekh-dj/trackdeck
 version=${1:-$(gh release view -R ${repo} --json tagName -q .tagName | sed 's/^trackdeck-v//')}
 tag=trackdeck-v$version
+# The latest release may lack a Mac build (1.3.2 and older had no macOS 12
+# .dmg): leave the cask as it is then. A version given by hand must have all.
+if [[ -z ${1:-} ]]; then
+    assets=$(gh release view "$tag" -R ${repo} --json assets -q '.assets[].name')
+    for f in macOS-AppleSilicon macOS-Intel macOS12-Intel; do
+        if ! grep -qx "TrackDeck-$version-$f.dmg.sha256" <<<"$assets"; then
+            echo "::notice::$tag has no $f .dmg yet: cask left as it is"
+            exit 0
+        fi
+    done
+fi
 sum() {
     gh release download "$tag" -R ${repo} -p "TrackDeck-$version-$1.dmg.sha256" -O - | awk '{print $1}'
 }
