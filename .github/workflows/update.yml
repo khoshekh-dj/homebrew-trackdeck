@@ -24,9 +24,9 @@ jobs:
         run: ./scripts/update-cask.sh ${{ inputs.version }}
       - name: Commit if it changed
         run: |
-          if git diff --quiet; then echo "up to date"; exit 0; fi
+          git add -A Casks; if git diff --cached --quiet; then echo "up to date"; exit 0; fi
           v=$(sed -n 's/^  version "\(.*\)"/\1/p' Casks/trackdeck.rb)
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "trackdeck $v"
+          git commit -m "trackdeck $v"
           git push
